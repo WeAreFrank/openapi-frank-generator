@@ -5,6 +5,7 @@ FROM maven:3.9 AS builder
 ENV LANG=C.UTF-8
 
 # create app folder for sources
+
 RUN mkdir -p /build
 WORKDIR /build
 
@@ -17,14 +18,19 @@ RUN mvn -B dependency:resolve dependency:resolve-plugins
 # Copy source code
 COPY src /build/src
 
-# Build application
-RUN mvn package
+# Build application and clean up Maven repository
+RUN mvn package && \
+    rm -rf /root/.m2/repository
 
 # RUN image
 FROM tomcat:11.0
 
 # Set locale to UTF-8
 ENV LANG=C.UTF-8
+
+# Create a non-root user and switch to it
+RUN useradd -ms /bin/bash appuser
+USER appuser
 
 # Copy the war file to tomcat's webapps directory
 COPY --from=builder /build/target/*.war /usr/local/tomcat/webapps/ROOT.war
@@ -34,4 +40,3 @@ EXPOSE 8080
 
 # Start Tomcat
 CMD ["catalina.sh", "run"]
-

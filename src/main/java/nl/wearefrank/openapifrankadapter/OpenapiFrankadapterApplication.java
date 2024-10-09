@@ -1,5 +1,5 @@
 /*
-   Copyright 2023 WeAreFrank!
+   Copyright 2024 WeAreFrank!
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
    You may obtain a copy of the License at
@@ -56,39 +56,73 @@ public class OpenapiFrankadapterApplication {
     @PostMapping(value = "/receiver-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resource> postFileReceiver(@RequestParam("file") MultipartFile file) throws IOException, SAXException {
         // Check if it's a JSON file
-        if (!file.getContentType().equals("application/json") && !file.getContentType().equals("application/yaml")) {
+        if (!file.getContentType().matches("application/(json|yaml|x-yaml|octet-stream|text/yaml|plain)")) {
             return ResponseEntity.status(415)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new InputStreamResource(new ByteArrayInputStream("{\"message\": \"Unsupported Media Type\"}".getBytes())));
         } else {
-            GenFiles convertedFile = new GenFiles("inputed-api.json", file.getBytes());
+            GenFiles convertedFile;
+            if (!file.getContentType().equals("application/json"))
+                convertedFile = new GenFiles("inputted-api.yaml", file.getBytes());
+            else {
+                convertedFile = new GenFiles("inputted-api.json", file.getBytes());
+            }
             return responseGenerator(convertedFile, Option.RECEIVER);
         }
     }
 
     @PostMapping(value = "/receiver-url", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Resource> postUrlReceiver(@RequestParam("url") String url) throws IOException, SAXException {
-        GenFiles convertedFile = new GenFiles("inputed-api.json", downloadFileFromUrl(url));
+        GenFiles convertedFile = new GenFiles("inputted-api.json", downloadFileFromUrl(url));
         return responseGenerator(convertedFile, Option.RECEIVER);
     }
 
     @PostMapping(value = "/sender-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Resource> postFileSender(@RequestParam("file") MultipartFile file) throws IOException, SAXException {
         // Check if it's a JSON file
-        if (!file.getContentType().equals("application/json") && !file.getContentType().equals("application/yaml")) {
+        if (!file.getContentType().matches("application/(json|yaml|x-yaml|octet-stream|text/yaml|plain)")) {
             return ResponseEntity.status(415)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new InputStreamResource(new ByteArrayInputStream("{\"message\": \"Unsupported Media Type\"}".getBytes())));
         } else {
-            GenFiles convertedFile = new GenFiles("inputed-api.json", file.getBytes());
+            GenFiles convertedFile;
+            if (!file.getContentType().equals("application/json"))
+                convertedFile = new GenFiles("inputted-api.yaml", file.getBytes());
+            else {
+                convertedFile = new GenFiles("inputted-api.json", file.getBytes());
+            }
             return responseGenerator(convertedFile, Option.SENDER);
         }
     }
 
     @PostMapping(value = "/sender-url", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public ResponseEntity<Resource> postUrlSender(@RequestParam("url") String url) throws IOException, SAXException {
-        GenFiles convertedFile = new GenFiles("inputed-api.json", downloadFileFromUrl(url));
+        GenFiles convertedFile = new GenFiles("inputted-api.json", downloadFileFromUrl(url));
         return responseGenerator(convertedFile, Option.SENDER);
+    }
+
+    @PostMapping(value = "/xsd-file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Resource>postFileXsd(@RequestParam("file") MultipartFile file) throws IOException, SAXException {
+        // Check if it's a JSON file
+        if (!file.getContentType().matches("application/(json|yaml|x-yaml|octet-stream|text/yaml|plain)")) {
+            return ResponseEntity.status(415)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(new InputStreamResource(new ByteArrayInputStream("{\"message\": \"Unsupported Media Type\"}".getBytes())));
+        } else {
+            GenFiles convertedFile;
+            if (!file.getContentType().equals("application/json"))
+                convertedFile = new GenFiles("inputted-api.yaml", file.getBytes());
+            else {
+                convertedFile = new GenFiles("inputted-api.json", file.getBytes());
+            }
+            return responseGenerator(convertedFile, Option.XSD);
+        }
+    }
+
+    @PostMapping(value = "/xsd-url", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public ResponseEntity<Resource> postUrlXsd(@RequestParam("url") String url) throws IOException, SAXException {
+        GenFiles convertedFile = new GenFiles("inputted-api.json", downloadFileFromUrl(url));
+        return responseGenerator(convertedFile, Option.XSD);
     }
 
     public static ResponseEntity responseGenerator(GenFiles file, Option templateOption) throws IOException, SAXException {

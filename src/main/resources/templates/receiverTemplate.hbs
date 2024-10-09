@@ -1,3 +1,10 @@
+{{!-- Helper function to handle status codes --}}
+{{#*inline "statusExit"}}
+    {{#when Response.statuscode 'eq' code}}
+        <Exit path="{{path}}" state="{{state}}" code="{{code}}" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />
+    {{/when}}
+{{/inline}}
+
 <Configuration
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="../FrankConfig.xsd"
@@ -11,18 +18,21 @@
             <Exits>
                 {{#each exits}}
                     {{#with this as |Response|}}
-                        {{#when Response.statuscode 'eq' '200'}}<Exit path="Success" state="SUCCESS" code="200" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '201'}}<Exit path="Created" state="SUCCESS" code="201" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '202'}}<Exit path="Accepted" state="SUCCESS" code="202" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '204'}}<Exit path="NoContent" state="SUCCESS" code="204" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '301'}}<Exit path="MovedPermanently" state="SUCCESS" code="301" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '304'}}<Exit path="NotModified" state="SUCCESS" code="304" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '400'}}<Exit path="BadRequest" state="ERROR" code="400" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '401'}}<Exit path="NotAuthorized" state="ERROR" code="401" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '403'}}<Exit path="NotAllowed" state="ERROR" code="403" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '412'}}<Exit path="PreconditionFailed" state="ERROR" code="412" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '500'}}<Exit path="ServerError" state="ERROR" code="500" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
-                        {{#when Response.statuscode 'eq' '504'}}<Exit path="Timeout" state="ERROR" code="504" {{#when Response.isEmpty 'eq' "true"}}empty="true"{{/when}} />{{/when}}
+                        {{!-- Success Status Codes --}}
+                        {{> statusExit code="200" path="Success" state="SUCCESS"}}
+                        {{> statusExit code="201" path="Created" state="SUCCESS"}}
+                        {{> statusExit code="202" path="Accepted" state="SUCCESS"}}
+                        {{> statusExit code="204" path="NoContent" state="SUCCESS"}}
+                        {{> statusExit code="301" path="MovedPermanently" state="SUCCESS"}}
+                        {{> statusExit code="304" path="NotModified" state="SUCCESS"}}
+
+                        {{!-- Error Status Codes --}}
+                        {{> statusExit code="400" path="BadRequest" state="ERROR"}}
+                        {{> statusExit code="401" path="NotAuthorized" state="ERROR"}}
+                        {{> statusExit code="403" path="NotAllowed" state="ERROR"}}
+                        {{> statusExit code="412" path="PreconditionFailed" state="ERROR"}}
+                        {{> statusExit code="500" path="ServerError" state="ERROR"}}
+                        {{> statusExit code="504" path="Timeout" state="ERROR"}}
                     {{/with}}
                 {{/each}}
             </Exits>
@@ -34,14 +44,14 @@
                     schema="{{adapterRefs.schema}}"
                     root="{{adapterRefs.root}}"
                     {{#if adapterRefs.responseRoot}}responseRoot="{{adapterRefs.responseRoot}}"{{/if}}
-                    deepSearch="true">
+                    deepSearch="false">
                 {{#each parameters}}<Param name="{{this}}" sessionKey="{{this}}"/>{{/each}}
 
-                <Forward name="success" path="Build_query"/>
-                <Forward name="parserError" path="NotWellFormed"/>
-                <Forward name="illegalRoot" path="IllegalRoot"/>
-                <Forward name="failure" path="InvalidXml"/>
-            </Json2XmlInputValidator>
+                    {{#if forwards.success}}<Forward name="success" path="Build_query"/>{{/if}}
+                    {{#if forwards.parserError}}<Forward name="parserError" path="NotWellFormed"/>{{/if}}
+                    {{#if forwards.illegalRoot}}<Forward name="illegalRoot" path="IllegalRoot"/>{{/if}}
+                    {{#if forwards.failure}}<Forward name="failure" path="InvalidXml"/>{{/if}}
+                </Json2XmlInputValidator>
             {{/if}}
         </Pipeline>
     </Adapter>
